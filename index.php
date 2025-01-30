@@ -33,6 +33,9 @@
             border: 1px solid black;
         }
         div.square{height: 14vb;width: 14vb;background-color: aqua;border-radius: 15px;border: 2px solid black;}
+
+        th{input{size: 100%;font-weight: 40px}}
+        .tombol_magic{display: none;}
     </style>
 </head>
 
@@ -42,8 +45,14 @@
         <div class="square"></div>
         <div class="button">
         <form action=""method="post"><button name="back">back to login page</button></form>
-        <button>search</button>
         <button id="to_user">user</button>
+        <button>search</button>
+        <?php 
+        $kondisi_mboh=false;
+        echo"<form action='' method='post'>";
+            echo"<button name='editmaybe' >edit mode</button>";
+            echo"<button name='liatmaybe' >view mode</button>";
+            echo "</form> ";?>
         </div>
     </section>
     <main>
@@ -74,6 +83,16 @@
         $conne->close();
         header('Location: '.$_SERVER["PHP_SELF"], true, 303);}
     };
+
+    ////////////////////////edit mode???
+        $kondisi_mboh=false;
+    if(isset($_POST['editmaybe'])){
+        $kondisi_mboh =true;
+    }
+    if(isset($_POST['liatmaybe'])){
+        $kondisi_mboh =true;
+    }
+
     //// buat reset negecegah eror
     $inp_barang=null;
     $inp_jum=null;
@@ -98,8 +117,12 @@
             }
         }
 
+        if (!$kondisi_mboh){
         jalan($inilah); // Call function
-
+        }
+        elseif($kondisi_mboh){
+            mundur($inilah);
+        }
         function jalan($inilah)//function to echo the data
         {
             $inilah = array_reverse($inilah); 
@@ -112,7 +135,6 @@
                 echo '<th>' . $baris[2] . '</th>';
                 echo '<th name="3">' . $baris[3] . '</th>';
                 echo '<th><form method="POST" action="">';
-                echo '<button type="submit" name="edit" value="' . htmlspecialchars($baris[0]) . '">edit</button>';
                 echo '<button type="submit" name="btt" value="' . htmlspecialchars($baris[0]) . '">remove</button>';
                 echo '</form></th>';
                 echo '</tr>';
@@ -137,17 +159,41 @@
             // //////////////untuk edit data//////////
             if (isset($_POST['edit'])) {
                 $idToedit = (int)$_POST['edit']; // Cast to int for safety
-                $conne2 = new mysqli("localhost", "root", "", "jadwal_tidur");
+                $conne3 = new mysqli("localhost", "root", "", "jadwal_tidur");
 
-
-                echo"<script>cobain_edit();</script>";
-                // $stmt = $conne2->prepare("DELETE FROM inventor WHERE id = ?");
-                // $stmt->bind_param("i", $idToedit); // "i" indicates the type is integer
-                // $stmt->execute();
-                // $stmt->close();
-                // $conne2->close();
+                $nama_barang_edit=@$_POST['nama_barang_edit'];
+                $stok_edit=@$_POST['stok_edit'];
+                $status_edit=@$_POST['status_edit'];
+                $stmtn = $conne3->prepare("UPDATE inventor SET `nama_barang`='$nama_barang_edit' , `stok`='$stok_edit' , `status`='$status_edit'  WHERE id = ?");
+                $stmtn->bind_param("i", $idToedit); // "i" indicates the type is integer
+                $stmtn->execute();
+                $stmtn->close();
+                $conne3->close();
+                header('Location: '.$_SERVER["PHP_SELF"], true, 303);
             }
 }
+
+
+    function mundur($inilah) {
+        $inilah = array_reverse($inilah); 
+        $indxing = 1;
+        echo"only 1 at the time";
+        foreach ($inilah as $baris) {
+            $mbohco=$baris['3'];
+            echo '<tr>';
+            echo '<th> <form method="POST" action="">' . $indxing  . '</th>';
+            echo '<th><input value=' . $baris[1] . ' name="nama_barang_edit"></input></th>';
+            echo '<th><input value=' . $baris[2] . ' name="stok_edit"></input></th>';
+            echo "<th><select name='status_edit'>";
+            echo '<option value="baik"';?> <?=($baris['3']=='baik')?'selected':''?>  <?php echo '> baik </option>';
+            echo '<option value="rusak" ';?><?=($mbohco=='rusak')?'selected':'' ?><?php echo'>rusak</option>';
+            echo '</select></th>';
+            echo '<th><button type="submit" name="edit" value="' . htmlspecialchars($baris[0]) . '">edit</button>';
+            echo '</form></th>';
+            echo '</tr>';
+            $indxing += 1; 
+        };
+    }
 ?>
         <tr>
             <form action="index.php" method="post">
@@ -168,9 +214,11 @@
         window.location.href = "user.php";
     });
 
-    function cobain_edit(){
-        $("th.3").replaceWith("<h2>" + $("th.3").html() + "</h2>");
-    }
+    // function cobain_edit(){
+    //     $("th").replaceWith("<input>" + $("th").html() + "</input>");
+    // }
+
+ 
     </script>
 </body>
 </html>
